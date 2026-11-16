@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robotics Design 1 – Singularity Quiz (250 MCQs)</title>
+    <title>Robotics Design 1 – Differential Motion Quiz</title>
     <style>
         * {
             box-sizing: border-box;
@@ -62,14 +62,6 @@
         }
         .btn:active {
             transform: scale(0.98);
-        }
-        .btn-secondary {
-            background: #3b6e9f;
-            box-shadow: 0 6px 12px rgba(59,110,159,0.2);
-            margin-left: 10px;
-        }
-        .btn-secondary:hover {
-            background: #2b567c;
         }
         .stats {
             display: flex;
@@ -238,13 +230,13 @@
 </head>
 <body>
 <div class="container">
-    <h1>🤖 Robotics Design 1 – Singularity Analysis</h1>
+    <h1>⚙️ Robotics Design 1 – Differential Motion</h1>
     <div class="subhead">
-        <p>250 scenario‑based & simple MCQs • select an option to see instant feedback</p>
+        <p id="subtitle">Jacobian, singularities, kinematics & mechanisms</p>
         <div class="stats">
             <span id="correctCount">✅ 0</span>
             <span id="incorrectCount">❌ 0</span>
-            <span id="totalCount">📋 250</span>
+            <span id="totalCount">📋 0</span>
         </div>
         <div>
             <button class="btn" id="shuffleBtn">🔄 Shuffle Questions & Options</button>
@@ -254,276 +246,213 @@
     <div id="quizContainer"></div>
 
     <div class="footer">
-        Robotics Design 1 • Jacobian & Singularities • All questions from Part A & Part B
+        Robotics Design 1 • Differential Motion, Jacobian, Kinematics & Mechanisms
     </div>
 </div>
 
 <script>
     // ------------------------------------------------------------------
-    // 1. ORIGINAL DATA – 150 Part A + 100 Part B = 250 questions
-    //    Each entry: { part, question, options: [A,B,C,D], answer: 'A'/'B'/'C'/'D' }
+    // 1. ORIGINAL DATA – all MCQs from the provided file
+    //    Each entry: { question, options: [A,B,C,D], answer: 'A'/'B'/'C'/'D' }
     // ------------------------------------------------------------------
     const rawData = [
-        // ---------- PART A : 150 scenario-based MCQs ----------
-        { part: "A", question: "A 3-DOF spatial robot arm has Joint 1 vertical (base rotation), and Links 2 and 3 move in a vertical plane. You immobilize Joints 2 and 3 and rotate only Joint 1. What is the direction of the endpoint velocity (column J1)?", options: ["Along Link 1", "Perpendicular to Link 2", "Azimuthal (horizontal/tangential around the Z-axis)", "Parallel to Link 3"], answer: "C" },
-        { part: "A", question: "You immobilize Joints 1 and 3 and move only Joint 2. Link 2 makes angle θ2 with the horizontal. The column vector J2 is perpendicular to which link?", options: ["Link 1", "Link 2", "Link 3", "The Z-axis"], answer: "B" },
-        { part: "A", question: "You immobilize Joints 1 and 2 and move only Joint 3. The column vector J3 is perpendicular to which link?", options: ["Link 2", "Link 3", "The Z-axis", "Link 1"], answer: "B" },
-        { part: "A", question: "You assemble J = [J1 J2 J3]. J1 lies in the horizontal plane, while J2 and J3 lie in the vertical plane. What is the rank of J at a non-singular configuration?", options: ["1", "2", "3", "0"], answer: "C" },
-        { part: "A", question: "To find singularities you set det(J) = 0. Since J1 is perpendicular to the vertical plane containing J2 and J3, when does det(J) become zero?", options: ["When J1 and J2 become parallel", "When J2 and J3 become parallel (collinear)", "When J1 becomes zero", "When θ1 = 0"], answer: "B" },
-        { part: "A", question: "The arm is fully extended so that Link 2 and Link 3 are collinear (θ3 = 0). What is the relationship between J2 and J3?", options: ["Perpendicular", "Parallel (same direction)", "Opposite and unequal", "Both zero"], answer: "B" },
-        { part: "A", question: "The arm is fully folded so that Link 3 folds back onto Link 2 (θ3 = 180°). What is the relationship between J2 and J3?", options: ["Collinear (parallel or anti-parallel)", "Perpendicular", "Independent", "J3 is zero"], answer: "A" },
-        { part: "A", question: "At a singular configuration the endpoint cannot produce non-zero velocity in one direction. At θ3 = 0 (fully extended), which direction is blocked?", options: ["Along Links 2/3 (radial)", "Perpendicular to Links 2/3 in the vertical plane", "Azimuthal direction", "Along the Z-axis"], answer: "B" },
-        { part: "A", question: "At θ3 = 180° (fully folded), J2 and J3 become collinear. Which direction is blocked?", options: ["Along Links 2/3", "Perpendicular to Links 2/3 in the vertical plane", "Azimuthal", "Along the X-axis"], answer: "B" },
-        { part: "A", question: "You locate the singular points in the workspace. At θ3 = 0 or 180°, where is the endpoint located?", options: ["At the base center", "At the workspace boundary (inner or outer)", "Exactly on the Z-axis", "At the origin"], answer: "B" },
-        { part: "A", question: "Joint 1 always produces velocity in the azimuthal direction regardless of θ2 and θ3. Can Joint 1 alone ever cause a singularity?", options: ["Yes, when θ1 = 0", "No, J1 never vanishes as long as link lengths are non-zero", "Yes, when θ2 = 0", "Yes, when θ3 = 180°"], answer: "B" },
-        { part: "A", question: "You solve det(J) = 0 in Step 3. What is the complete set of singular joint angles?", options: ["θ1 = 0, θ2 = 0, θ3 = 0", "θ3 = 0 or θ3 = 180°, for any θ1 and θ2", "θ2 = 90°, θ3 = 90°", "θ1 = 90°, θ2 = 0"], answer: "B" },
-        { part: "A", question: "You sketch the singular posture where Link 2 and Link 3 form one straight line. What does the arm look like?", options: ["L-shaped", "Fully stretched straight arm", "Folded zigzag", "Circular"], answer: "B" },
-        { part: "A", question: "You sketch the singular posture where Link 3 folds back onto Link 2. Where is the endpoint?", options: ["At maximum reach", "Close to the tip of Link 2 (contracted)", "At the origin", "On the Z-axis"], answer: "B" },
-        { part: "A", question: "At a singular configuration the rank of the Jacobian drops. What is the rank at θ3 = 0?", options: ["3", "2", "1", "0"], answer: "B" },
-        { part: "A", question: "J1 is in the horizontal plane; J2 and J3 are in the vertical plane. At θ3 = 0, J2 and J3 become parallel. What is the range space then?", options: ["The full 3D space", "A 2D plane (azimuthal plus one vertical direction)", "A 1D line", "The zero space"], answer: "B" },
-        { part: "A", question: "At θ3 = 180°, J2 and J3 are again collinear. Which direction is missing from the range space?", options: ["Azimuthal", "The vertical-plane direction perpendicular to the links", "The direction along the links", "The Z-axis"], answer: "B" },
-        { part: "A", question: "In Step 4 you show that the singular configuration lies at the workspace boundary. At θ3 = 0, what is the distance of the endpoint from the base?", options: ["l1 + l2 + l3 (maximum reach)", "l1 − l2 − l3", "0", "l1"], answer: "A" },
-        { part: "A", question: "At θ3 = 180°, what is the distance of the endpoint from the base?", options: ["l1 + l2 + l3", "l1 + l2 − l3 (reduced reach due to folding)", "0", "l1"], answer: "B" },
-        { part: "A", question: "You plan a trajectory that avoids θ3 = 0 and θ3 = 180°. Why is approaching these angles dangerous?", options: ["Joint velocities can blow up near the singularity", "The motor overheats", "The link breaks", "Gravity increases"], answer: "A" },
-        { part: "A", question: "While computing det(J) you notice that J1's contribution never vanishes for any θ1. This means the singularity comes only from which pair of vectors?", options: ["J1 and J2", "J2 and J3", "J1 and J3", "None"], answer: "B" },
-        { part: "A", question: "You test an arm with l2 = l3. At θ3 = 0 the endpoint is at maximum reach. If you command the endpoint to move perpendicular to the links (in the vertical plane), what happens?", options: ["It moves easily", "Non-zero velocity is impossible (singular)", "Only Joint 1 can move it", "Only Joint 2 can move it"], answer: "B" },
-        { part: "A", question: "You write J1 as a vector of the form [−y, x, 0]ᵀ. About which axis does Joint 1 rotate?", options: ["X-axis", "Y-axis", "Z-axis", "Link 2 axis"], answer: "C" },
-        { part: "A", question: "In Step 1 you generate endpoint velocity using only Joint 2. Link 2 makes angle θ2 with the horizontal. In which plane does J2 lie?", options: ["Horizontal (xy)", "Vertical plane (radial–z)", "Azimuthal plane", "Any plane"], answer: "B" },
-        { part: "A", question: "J3 also lies in the vertical plane because Link 3 is at angle θ2 + θ3. When are J2 and J3 linearly dependent?", options: ["When θ3 = 0 or 180°", "When θ2 = 0", "When θ1 = 0", "Never"], answer: "A" },
-        { part: "A", question: "You solve det(J) = 0. Since J1 is perpendicular to the vertical plane, det(J) = 0 only when J2 and J3 are parallel. What is the mathematical name of this condition?", options: ["Orthogonality", "Collinearity", "Skewness", "Symmetry"], answer: "B" },
-        { part: "A", question: "You show the singular posture where the arm is perfectly straight. In which direction is the endpoint velocity zero?", options: ["Azimuthal", "Radial/vertical-plane direction perpendicular to the links", "Along the Z-axis", "Tangential"], answer: "B" },
-        { part: "A", question: "At θ3 = 180° the arm is folded. Which direction is still blocked at this singularity?", options: ["Azimuthal", "Vertical-plane direction perpendicular to the links", "Direction along the links", "X-axis"], answer: "B" },
-        { part: "A", question: "You map the workspace and mark singular points at θ3 = 0 and 180°. Where do these points lie?", options: ["At the center of the workspace", "On the workspace boundary (inner or outer)", "On the Z-axis", "At random locations"], answer: "B" },
-        { part: "A", question: "You solve inverse differential kinematics near a singular configuration. How do the required joint velocities behave?", options: ["They become zero", "They remain normal", "They blow up (become very large)", "They become negative"], answer: "C" },
-        { part: "A", question: "You set det(J) = 0. The magnitude of J1 never vanishes for any θ1. Does any value of θ1 create a singularity?", options: ["Yes", "No", "Only θ1 = 90°", "Only θ1 = 180°"], answer: "B" },
-        { part: "A", question: "J2 and J3 both lie in the vertical plane. Their cross product must be zero at singularity. What does a zero cross product mean geometrically?", options: ["They are perpendicular", "They are parallel or anti-parallel", "They are both zero", "They are skew"], answer: "B" },
-        { part: "A", question: "You draw the θ3 = 0 singular posture where Links 2 and 3 form a single line. Along which line through the endpoint can no velocity be generated?", options: ["Along the links", "Perpendicular to the links (in the vertical plane)", "Azimuthal", "None"], answer: "B" },
-        { part: "A", question: "The same blocked direction occurs at θ3 = 180°. What common factor causes singularity in both cases?", options: ["J1 is zero", "J2 and J3 are collinear", "θ2 = 0", "θ1 = 0"], answer: "B" },
-        { part: "A", question: "You command the robot to track a trajectory passing through a singular configuration at constant endpoint speed. What happens to the joint velocities?", options: ["They stay constant", "They become zero", "They tend to infinity", "They become negative"], answer: "C" },
-        { part: "A", question: "In Step 4 you sketch the singular posture at θ3 = 0. What is the arm's shape?", options: ["Fully extended straight", "Fully folded", "L-shaped", "U-shaped"], answer: "A" },
-        { part: "A", question: "What is the arm's shape at θ3 = 180°?", options: ["Fully extended", "Folded (contracted)", "L-shaped", "Straight"], answer: "B" },
-        { part: "A", question: "The endpoint moves in 3D space and there are 3 joints. What is the size of the Jacobian?", options: ["2×2", "3×3", "3×2", "2×3"], answer: "B" },
-        { part: "A", question: "You solve det(J) = 0. J1 always remains independent (azimuthal). The singularity condition effectively reduces to the determinant of which submatrix?", options: ["J1 and J2", "J2 and J3", "J1 and J3", "None"], answer: "B" },
-        { part: "A", question: "At θ3 = 0, which endpoint velocity directions remain possible?", options: ["Azimuthal only", "Azimuthal and along the links (radial)", "Vertical only", "None"], answer: "B" },
-        { part: "A", question: "At θ3 = 180°, azimuthal and radial motions are possible, but one direction is not. Which one?", options: ["Azimuthal", "Radial", "Vertical-plane direction perpendicular to the links", "Along the links"], answer: "C" },
-        { part: "A", question: "You immobilize Joints 1 and 2 and rotate Joint 3 at unit velocity. The resulting column vector J3 represents what?", options: ["The endpoint velocity per unit Joint 3 velocity with other joints fixed", "The joint torque", "The link length", "The gravity vector"], answer: "A" },
-        { part: "A", question: "You immobilize all joints except Joint 1 and rotate it at unit velocity. J1 represents what?", options: ["Endpoint velocity per unit Joint 1 velocity with other joints fixed", "The base reaction force", "The link mass", "The Z-axis position"], answer: "A" },
-        { part: "A", question: "The Jacobian columns J2 and J3 are both in the vertical plane. At a general (non-singular) posture, what do J2 and J3 span?", options: ["The full 3D space", "A 2D vertical plane", "A 1D line", "Nothing"], answer: "B" },
-        { part: "A", question: "Combined with J1 (azimuthal), what do J1, J2, and J3 span at a general posture?", options: ["A 2D plane", "A 1D line", "The full 3D space", "The zero space"], answer: "C" },
-        { part: "A", question: "At θ3 = 0, J2 and J3 are parallel. What is the dimension of the range space?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "At θ3 = 180°, J2 and J3 are collinear. What is the dimension of the null space of J (for a 3×3 square Jacobian)?", options: ["0", "1", "2", "3"], answer: "B" },
-        { part: "A", question: "At a non-singular configuration with a 3×3 full-rank Jacobian, what is the dimension of the null space?", options: ["0", "1", "2", "3"], answer: "A" },
-        { part: "A", question: "You observe that at singularity the endpoint loses one degree of freedom. By how much does the null space dimension increase?", options: ["By 0", "By 1", "By 2", "By 3"], answer: "B" },
-        { part: "A", question: "You write the singularity condition as det[J2 J3] = 0 within the vertical plane. What does this correspond to physically?", options: ["Links 2 and 3 aligned (extended or folded)", "Joint 1 locked", "Endpoint at the origin", "Links 2 and 3 perpendicular"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move exactly along the links at θ3 = 0. What happens?", options: ["Motion is possible (radial direction is in the range space)", "Motion is impossible", "Joint velocities blow up", "The arm folds"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move perpendicular to the links in the vertical plane at θ3 = 0. What happens?", options: ["Motion is possible", "Motion is impossible (blocked direction)", "The arm rotates about Z", "The arm extends"], answer: "B" },
-        { part: "A", question: "At θ3 = 180°, you command motion along the links. What happens?", options: ["Motion is possible", "Motion is impossible", "Only Joint 3 moves", "The arm extends"], answer: "A" },
-        { part: "A", question: "At θ3 = 180°, you command motion perpendicular to the links in the vertical plane. What happens?", options: ["Motion is possible", "Motion is impossible (blocked direction)", "Motion is possible but slow", "The arm unfolds"], answer: "B" },
-        { part: "A", question: "You compute det(J) symbolically and find it proportional to sin θ3. What are the singular angles?", options: ["θ3 = 0, π", "θ3 = π/2", "θ3 = π/4", "θ3 = 2π"], answer: "A" },
-        { part: "A", question: "Since det(J) ∝ sin θ3, near θ3 = 0 the joint velocities required for a fixed endpoint velocity behave like what?", options: ["They scale with 1/sin θ3 and blow up", "They scale with sin θ3 and vanish", "They stay constant", "They scale with cos θ3"], answer: "A" },
-        { part: "A", question: "You test θ2 = 0 with θ3 = 90°. Is the arm singular?", options: ["Yes", "No", "Only if θ1 = 0", "Only if l2 = l3"], answer: "B" },
-        { part: "A", question: "You test θ1 = 45°, θ2 = 30°, θ3 = 90°. Is the arm singular?", options: ["Yes", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "B" },
-        { part: "A", question: "You test θ1 = 0°, θ2 = 0°, θ3 = 0°. Is the arm singular?", options: ["Yes, because θ3 = 0", "No", "Only if l1 = 0", "Only if θ2 = 90°"], answer: "A" },
-        { part: "A", question: "You test θ1 = 90°, θ2 = 45°, θ3 = 180°. Is the arm singular?", options: ["Yes, because θ3 = 180°", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "A", question: "You set all joint velocities to zero except Joint 1. The endpoint moves in which direction?", options: ["Azimuthal", "Radial", "Vertical", "Along Link 3"], answer: "A" },
-        { part: "A", question: "You set all joint velocities to zero except Joint 2 (at a general posture). The endpoint moves in which plane?", options: ["Horizontal", "Vertical plane", "Azimuthal plane", "Along Z only"], answer: "B" },
-        { part: "A", question: "You set all joint velocities to zero except Joint 3 (at a general posture). The endpoint moves in which plane?", options: ["Horizontal", "Vertical plane", "Azimuthal plane", "Along Z only"], answer: "B" },
-        { part: "A", question: "Because J2 and J3 lie in the same vertical plane, what is the maximum number of independent directions they can produce together at a non-singular posture?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "Including J1, what is the maximum number of independent directions the three columns can produce at a non-singular posture?", options: ["1", "2", "3", "0"], answer: "C" },
-        { part: "A", question: "At θ3 = 0, the three columns together can produce how many independent directions?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "At θ3 = 180°, the three columns together can produce how many independent directions?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "You note that the singular postures occur only at the extremes of Link 3's relative angle. What physical interpretation does this have?", options: ["The arm is at the edge of its reachable workspace (fully extended or folded)", "The arm is at the center of the workspace", "The base joint is locked", "The arm is at θ1 = 0"], answer: "A" },
-        { part: "A", question: "You draw the inner boundary of the workspace. Which singular posture produces it?", options: ["θ3 = 0", "θ3 = 180° (folded)", "θ1 = 0", "θ2 = 0"], answer: "B" },
-        { part: "A", question: "You draw the outer boundary of the workspace. Which singular posture produces it?", options: ["θ3 = 0 (fully extended)", "θ3 = 180°", "θ1 = 0", "θ2 = 0"], answer: "A" },
-        { part: "A", question: "You observe that the azimuthal direction is always available because J1 never vanishes. What does this imply about the robot's dexterity?", options: ["The robot can always rotate about the base axis", "The robot can never rotate", "The robot is always singular", "The robot has no workspace"], answer: "A" },
-        { part: "A", question: "You apply a small joint velocity δθ3 = ε at θ3 = 0. What is the resulting endpoint displacement direction?", options: ["Along the links (radial)", "Perpendicular to the links", "Azimuthal", "Zero"], answer: "A" },
-        { part: "A", question: "At θ3 = 0, a small change δθ3 produces endpoint motion along the links. Why can't it produce perpendicular motion?", options: ["Because J3 is parallel to J2 at θ3 = 0", "Because Joint 3 is locked", "Because l3 = 0", "Because θ1 = 0"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0 the endpoint cannot move perpendicular to the links. This direction corresponds to which physical motion?", options: ["Bending the arm further (changing the elbow angle)", "Rotating the base", "Sliding along the link", "Rotating about the link axis"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 180° the endpoint also cannot move perpendicular to the links. This is because the arm is fully folded and further bending is impossible. What is the blocked motion?", options: ["Unfolding/bending the elbow in the vertical plane", "Rotating the base", "Sliding along the link", "Rotating about the link axis"], answer: "A" },
-        { part: "A", question: "You write the Jacobian as J = [J1, J2, J3]. At θ3 = 0, J2 = 2J3 (say). What does this mean for the range space?", options: ["J2 and J3 contribute only one independent direction", "They contribute two independent directions", "They contribute three independent directions", "They vanish"], answer: "A" },
-        { part: "A", question: "You compute the determinant using the scalar triple product J1 · (J2 × J3). Since J1 is perpendicular to the vertical plane, what does the determinant reduce to?", options: ["The 2D cross product magnitude of J2 and J3 (in the vertical plane)", "The dot product of J1 and J2", "The magnitude of J1 only", "Zero always"], answer: "A" },
-        { part: "A", question: "The scalar triple product vanishes when J2 and J3 are parallel. What is the geometric meaning of the determinant in this context?", options: ["The volume spanned by the three column vectors; zero when they are coplanar", "The mass of the arm", "The length of the arm", "The joint torque"], answer: "A" },
-        { part: "A", question: "You notice that J1, J2, and J3 are always coplanar at singularity. What does coplanarity of the three columns imply?", options: ["The Jacobian is singular (det = 0)", "The Jacobian is identity", "The Jacobian is orthogonal", "The Jacobian is invertible"], answer: "A" },
-        { part: "A", question: "You plan to avoid singularities by keeping θ3 away from 0 and 180°. What is this strategy called?", options: ["Singularity avoidance through joint-space trajectory planning", "Redundancy resolution", "Force control", "Impedance control"], answer: "A" },
-        { part: "A", question: "You add a fourth joint to the arm to avoid singularities. What is this strategy called?", options: ["Adding redundancy", "Reducing degrees of freedom", "Locking joints", "Gravity compensation"], answer: "A" },
-        { part: "A", question: "You observe that at θ3 = 0 the endpoint is at maximum reach. What happens to the radial velocity capability there?", options: ["It is available (along the link)", "It is blocked", "It is infinite", "It is zero in all directions"], answer: "A" },
-        { part: "A", question: "You observe that at θ3 = 0 the perpendicular vertical velocity is blocked. What happens if you command it?", options: ["The required joint velocities go to infinity", "The arm moves easily", "The arm stops", "The arm rotates about Z"], answer: "A" },
-        { part: "A", question: "You test θ3 = 90° with any θ2. Is the arm singular?", options: ["Yes", "No (general posture)", "Only if θ1 = 0", "Only if l2 = l3"], answer: "B" },
-        { part: "A", question: "You test θ3 = 0.1° (very close to singular). What happens to the joint velocities for a fixed endpoint velocity?", options: ["They become very large", "They become very small", "They stay normal", "They become zero"], answer: "A" },
-        { part: "A", question: "You test θ3 = 179.9° (very close to singular). What happens to the joint velocities?", options: ["They become very large", "They become very small", "They stay normal", "They become zero"], answer: "A" },
-        { part: "A", question: "You note that singularity at θ3 = 0 corresponds to the arm being fully extended. What is the endpoint's distance from the base?", options: ["l1 + l2 + l3", "l1", "0", "l1 − l2 + l3"], answer: "A" },
-        { part: "A", question: "You note that singularity at θ3 = 180° corresponds to the arm being fully folded. What is the endpoint's distance from the base?", options: ["l1 + l2 + l3", "l1 + l2 − l3", "0", "l1"], answer: "B" },
-        { part: "A", question: "You observe that the blocked direction at both singularities is the same (perpendicular to the links in the vertical plane). Why?", options: ["Because in both cases J2 and J3 are collinear, so their span is only along the links", "Because J1 is zero", "Because θ2 = 0", "Because the base is locked"], answer: "A" },
-        { part: "A", question: "You write the range space at θ3 = 0 as span{J1, J2} (since J3 is parallel to J2). What is the dimension?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "You write the range space at θ3 = 180° as span{J1, J2}. What is the dimension?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "You note that the null space dimension at θ3 = 0 (for the 3×3 Jacobian) is 1. What does this mean?", options: ["There is one joint velocity combination that produces no endpoint motion", "There are two such combinations", "There are none", "The arm cannot move"], answer: "A" },
-        { part: "A", question: "You note that at a non-singular posture the null space dimension is 0. What does this mean?", options: ["The only joint velocity producing zero endpoint motion is the zero vector", "There are infinite such combinations", "The arm is singular", "The arm cannot move"], answer: "A" },
-        { part: "A", question: "You compute the determinant symbolically and find det(J) = l2 l3 sin θ3 × (something nonzero). What are the singular angles?", options: ["θ3 = 0, π", "θ3 = π/2", "θ3 = π/4", "θ3 = 2π"], answer: "A" },
-        { part: "A", question: "You note that the singularity condition depends only on θ3, not on θ1 or θ2. What does this imply?", options: ["The singular postures form a family parameterized by θ1 and θ2 (a surface in joint space)", "Only one singular posture exists", "The arm is never singular", "The arm is always singular"], answer: "A" },
-        { part: "A", question: "You visualize the singular set in joint space. What does it look like?", options: ["Two planes: θ3 = 0 and θ3 = 180° (for all θ1, θ2)", "A single point", "A sphere", "A line"], answer: "A" },
-        { part: "A", question: "You note that the singular set in the workspace is a surface. What does this surface correspond to?", options: ["The inner and outer boundaries of the reachable workspace", "The center of the workspace", "The Z-axis", "The origin"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move perpendicular to the links in the vertical plane at θ3 = 0. The Jacobian is singular, so the inverse does not exist. What happens to the resolved-rate control?", options: ["It fails (joint velocities become unbounded)", "It works normally", "It moves the arm in the azimuthal direction", "It locks the base"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move along the links at θ3 = 0. The desired velocity lies in the range space. What happens?", options: ["A solution exists (possibly non-unique)", "No solution exists", "Joint velocities blow up", "The arm folds"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move in the azimuthal direction at θ3 = 0. What happens?", options: ["A solution exists (J1 provides it)", "No solution exists", "Joint velocities blow up", "The arm folds"], answer: "A" },
-        { part: "A", question: "You observe that at θ3 = 0, the endpoint can still move in the azimuthal and radial directions. How many degrees of freedom remain?", options: ["1", "2", "3", "0"], answer: "B" },
-        { part: "A", question: "At θ3 = 0, one degree of freedom is lost. Which one?", options: ["The vertical-plane direction perpendicular to the links", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "A", question: "At θ3 = 180°, one degree of freedom is lost. Which one?", options: ["The vertical-plane direction perpendicular to the links", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0 the arm is fully extended and at θ3 = 180° it is fully folded. What do these two postures have in common?", options: ["Both make J2 and J3 collinear", "Both make J1 zero", "Both make θ2 = 0", "Both make the endpoint at the origin"], answer: "A" },
-        { part: "A", question: "You compute the cross product J2 × J3. At what θ3 is it zero?", options: ["θ3 = 0 or 180°", "θ3 = 90°", "θ3 = 45°", "Never"], answer: "A" },
-        { part: "A", question: "You note that det(J) = J1 · (J2 × J3). Since J1 is nonzero and perpendicular to the vertical plane, det(J) = 0 requires what?", options: ["J2 × J3 = 0", "J1 = 0", "J2 = 0", "J3 = 0"], answer: "A" },
-        { part: "A", question: "You note that J2 × J3 = 0 means J2 and J3 are parallel. What are the corresponding θ3 values?", options: ["0 and 180°", "90° and 270°", "45° and 135°", "None"], answer: "A" },
-        { part: "A", question: "You test θ3 = 0 with θ2 = 90°. Is the arm singular?", options: ["Yes", "No", "Only if θ1 = 0", "Only if l2 = l3"], answer: "A" },
-        { part: "A", question: "You test θ3 = 180° with θ2 = 0°. Is the arm singular?", options: ["Yes", "No", "Only if θ1 = 0", "Only if l2 = l3"], answer: "A" },
-        { part: "A", question: "You test θ3 = 45°. Is the arm singular?", options: ["Yes", "No", "Only if θ2 = 0", "Only if θ1 = 0"], answer: "B" },
-        { part: "A", question: "You test θ3 = 135°. Is the arm singular?", options: ["Yes", "No", "Only if θ2 = 0", "Only if θ1 = 0"], answer: "B" },
-        { part: "A", question: "You observe that the singular set in joint space consists of two planes. What are their equations?", options: ["θ3 = 0 and θ3 = π", "θ1 = 0 and θ1 = π", "θ2 = 0 and θ2 = π", "θ1 = θ2 and θ2 = θ3"], answer: "A" },
-        { part: "A", question: "You observe that the singular set in the workspace consists of two surfaces. What are they?", options: ["The inner and outer workspace boundaries", "The horizontal mid-plane", "The Z-axis", "The origin"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move in the blocked direction at θ3 = 0. What does the resolved-rate control do?", options: ["It produces unbounded joint velocities (or fails)", "It moves the arm normally", "It rotates the base", "It stops the arm"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move in the azimuthal direction at θ3 = 0. Which joint provides the motion?", options: ["Joint 1", "Joint 2", "Joint 3", "None"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move radially (along the links) at θ3 = 0. Which joints can provide the motion?", options: ["Joints 2 and 3 (they are collinear, so their combination gives radial motion)", "Joint 1 only", "Joint 1 and 2 only", "None"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0, J2 and J3 are parallel. What does this mean for the joint velocities that produce radial motion?", options: ["They are non-unique (a family of solutions)", "They are unique", "They do not exist", "They are zero"], answer: "A" },
-        { part: "A", question: "You note that at a non-singular posture, the joint velocities for a given endpoint velocity are unique. Why?", options: ["Because the Jacobian is invertible (full rank)", "Because the Jacobian is singular", "Because the arm is redundant", "Because the arm is at the workspace boundary"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0, the joint velocities for a given radial endpoint velocity are non-unique. Why?", options: ["Because the Jacobian is singular (rank 2 instead of 3)", "Because the Jacobian is full rank", "Because the arm is not redundant", "Because the base is locked"], answer: "A" },
-        { part: "A", question: "You note that the singular configurations are at the workspace boundary. What does this mean for the robot's reach?", options: ["The robot cannot reach beyond these surfaces", "The robot can reach anywhere", "The robot has no workspace", "The robot can reach only the Z-axis"], answer: "A" },
-        { part: "A", question: "You test θ3 = 0 with l2 = l3 = 1, l1 = 0. What is the endpoint's distance from the base?", options: ["2", "1", "0", "3"], answer: "A" },
-        { part: "A", question: "You test θ3 = 180° with l2 = l3 = 1, l1 = 0. What is the endpoint's distance from the base?", options: ["2", "1", "0", "3"], answer: "C" },
-        { part: "A", question: "You note that at θ3 = 180° with l2 = l3, the endpoint coincides with the base (if l1 = 0). What is the singularity type?", options: ["Inner boundary singularity (fully folded)", "Outer boundary singularity", "Base singularity", "No singularity"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0 with l2 = l3, the endpoint is at maximum reach. What is the singularity type?", options: ["Outer boundary singularity (fully extended)", "Inner boundary singularity", "Base singularity", "No singularity"], answer: "A" },
-        { part: "A", question: "You observe that the blocked direction at both singularities is perpendicular to the links in the vertical plane. What does this imply for the endpoint's velocity ellipsoid?", options: ["The ellipsoid collapses to a disk (one axis becomes zero)", "The ellipsoid becomes a sphere", "The ellipsoid vanishes", "The ellipsoid becomes a line"], answer: "A" },
-        { part: "A", question: "You compute the manipulability measure √det(J Jᵀ). At singularity, what is its value?", options: ["0", "1", "∞", "−1"], answer: "A" },
-        { part: "A", question: "You note that manipulability is zero at θ3 = 0 and 180°. What does this mean?", options: ["The robot is at a singular configuration", "The robot is at maximum dexterity", "The robot is at the center of the workspace", "The robot is redundant"], answer: "A" },
-        { part: "A", question: "You observe that the singularity condition depends only on θ3. What does this mean for the robot's design?", options: ["The singularity can be avoided by controlling only Joint 3", "The singularity cannot be avoided", "All joints must be controlled to avoid singularity", "The base joint is irrelevant"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move perpendicular to the links at θ3 = 0. What is the minimum-norm joint velocity solution?", options: ["It does not exist (or is unbounded)", "It is zero", "It is unique and finite", "It is infinite in magnitude"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move along the links at θ3 = 0. What is the minimum-norm joint velocity solution?", options: ["It exists and is finite (non-unique, but minimum-norm is unique)", "It does not exist", "It is unbounded", "It is zero"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0, the Jacobian has rank 2. What is the dimension of the left null space (the set of endpoint velocities that cannot be produced)?", options: ["1", "2", "3", "0"], answer: "A" },
-        { part: "A", question: "You note that the left null space at θ3 = 0 is spanned by which direction?", options: ["The direction perpendicular to the links in the vertical plane", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 180°, the left null space is also spanned by which direction?", options: ["The direction perpendicular to the links in the vertical plane", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "A", question: "You observe that the left null space is the same at both singularities. Why?", options: ["Because in both cases J2 and J3 are collinear, so the range space is the same 2D plane", "Because J1 is zero", "Because θ2 = 0", "Because the base is locked"], answer: "A" },
-        { part: "A", question: "You note that the singular set in joint space is two planes. What is the dimension of this set?", options: ["2", "1", "0", "3"], answer: "A" },
-        { part: "A", question: "You note that the singular set in the workspace is two surfaces. What is the dimension of this set?", options: ["2", "1", "0", "3"], answer: "A" },
-        { part: "A", question: "You plan a trajectory that avoids the singular surfaces. What is this called?", options: ["Singularity-free trajectory planning", "Redundancy resolution", "Force control", "Impedance control"], answer: "A" },
-        { part: "A", question: "You add a fourth joint to the arm. What happens to the singularity at θ3 = 0?", options: ["The singularity may be avoided because the extra joint provides the missing direction", "The singularity remains", "The singularity becomes worse", "The arm stops working"], answer: "A" },
-        { part: "A", question: "You note that the arm has 3 joints and the endpoint moves in 3D space. Is the arm redundant at a non-singular posture?", options: ["No, it is exactly determined (3 joints, 3 DOF)", "Yes, it is redundant", "It depends on θ1", "It depends on θ3"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0, the arm effectively has only 2 independent DOF. What does this mean for the endpoint's motion?", options: ["The endpoint cannot move in one direction", "The endpoint can move in all directions", "The endpoint can move in 3 directions", "The endpoint cannot move at all"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move in the blocked direction at θ3 = 0. What happens to the determinant of the Jacobian?", options: ["It is zero (singular)", "It is nonzero", "It is infinite", "It is negative"], answer: "A" },
-        { part: "A", question: "You command the endpoint to move in the azimuthal direction at θ3 = 0. What happens to the determinant of the Jacobian?", options: ["It is zero (singular), but the azimuthal direction is still in the range space", "It is nonzero", "It is infinite", "It is negative"], answer: "A" },
-        { part: "A", question: "You note that the singularity condition is det(J) = 0. What is the geometric interpretation of det(J)?", options: ["The volume of the parallelepiped spanned by J1, J2, and J3", "The sum of the column norms", "The dot product of J1 and J2", "The cross product of J1 and J2"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 0, the parallelepiped volume is zero. What does this mean geometrically?", options: ["The three column vectors are coplanar", "The three column vectors are orthogonal", "The three column vectors are zero", "The three column vectors are parallel"], answer: "A" },
-        { part: "A", question: "You note that at θ3 = 180°, the parallelepiped volume is also zero. What does this mean?", options: ["The three column vectors are coplanar", "The three column vectors are orthogonal", "The three column vectors are zero", "The three column vectors are parallel"], answer: "A" },
-        { part: "A", question: "You observe that J1 is always perpendicular to the plane containing J2 and J3. What does this mean for the determinant?", options: ["det(J) = |J1| × |J2 × J3|", "det(J) = |J1| + |J2| + |J3|", "det(J) = 0 always", "det(J) = 1 always"], answer: "A" },
-        { part: "A", question: "You note that J2 × J3 = 0 at θ3 = 0. What does this mean for the determinant?", options: ["det(J) = 0", "det(J) = 1", "det(J) = ∞", "det(J) = −1"], answer: "A" },
-        { part: "A", question: "You note that the singularity at θ3 = 0 is a 'boundary singularity.' What does this mean?", options: ["It occurs at the boundary of the workspace", "It occurs at the center of the workspace", "It occurs at the base", "It occurs at θ1 = 0"], answer: "A" },
-        { part: "A", question: "You note that the singularity at θ3 = 180° is also a 'boundary singularity.' What does this mean?", options: ["It occurs at the inner boundary of the workspace", "It occurs at the outer boundary of the workspace", "It occurs at the base", "It occurs at θ1 = 0"], answer: "A" },
-        { part: "A", question: "You summarize the singular configurations of the 3-DOF spatial arm. What are they?", options: ["θ3 = 0 (fully extended) and θ3 = 180° (fully folded), for any θ1 and θ2", "θ1 = 0 and θ2 = 0 only", "θ2 = 90° only", "θ1 = 90° only"], answer: "A" },
-
-        // ---------- PART B : 100 simple MCQs ----------
-        { part: "B", question: "What is the first step in singularity analysis of the 3-DOF arm?", options: ["Obtain each Jacobian column vector by moving one joint at a time", "Set det(J) = 1", "Invert the Jacobian", "Compute the inverse kinematics"], answer: "A" },
-        { part: "B", question: "How is the Jacobian matrix constructed?", options: ["By concatenating the column vectors", "By multiplying the column vectors", "By adding the column vectors", "By inverting the column vectors"], answer: "A" },
-        { part: "B", question: "What condition defines a singularity?", options: ["det(J) = 0", "det(J) = 1", "det(J) = ∞", "det(J) = −1"], answer: "A" },
-        { part: "B", question: "What is the direction of J1 for the 3-DOF spatial arm?", options: ["Azimuthal (horizontal/tangential)", "Radial", "Vertical", "Along Link 3"], answer: "A" },
-        { part: "B", question: "J2 is perpendicular to which link?", options: ["Link 2", "Link 1", "Link 3", "The Z-axis"], answer: "A" },
-        { part: "B", question: "J3 is perpendicular to which link?", options: ["Link 3", "Link 2", "Link 1", "The Z-axis"], answer: "A" },
-        { part: "B", question: "In which plane do J2 and J3 lie?", options: ["The vertical plane", "The horizontal plane", "The azimuthal plane", "The XY plane"], answer: "A" },
-        { part: "B", question: "When are J2 and J3 parallel?", options: ["When θ3 = 0 or 180°", "When θ2 = 0", "When θ1 = 0", "Never"], answer: "A" },
-        { part: "B", question: "What are the singular joint angles for the 3-DOF arm?", options: ["θ3 = 0 or 180°", "θ1 = 0", "θ2 = 0", "θ1 = θ2 = θ3 = 0"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, what is the arm's posture?", options: ["Fully extended", "Fully folded", "L-shaped", "U-shaped"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, what is the arm's posture?", options: ["Fully folded", "Fully extended", "L-shaped", "Straight"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, which direction is blocked?", options: ["Perpendicular to the links in the vertical plane", "Azimuthal", "Radial", "Along the links"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, which direction is blocked?", options: ["Perpendicular to the links in the vertical plane", "Azimuthal", "Radial", "Along the links"], answer: "A" },
-        { part: "B", question: "What is the rank of the Jacobian at singularity?", options: ["2", "3", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the rank of the Jacobian at a non-singular posture?", options: ["3", "2", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the dimension of the null space at a non-singular posture?", options: ["0", "1", "2", "3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the null space at singularity?", options: ["1", "0", "2", "3"], answer: "A" },
-        { part: "B", question: "Where in the workspace do singular configurations occur?", options: ["At the workspace boundary", "At the center", "At the base", "At the origin"], answer: "A" },
-        { part: "B", question: "What happens to joint velocities near a singularity?", options: ["They blow up", "They become zero", "They stay constant", "They become negative"], answer: "A" },
-        { part: "B", question: "What is det(J) proportional to for this arm?", options: ["sin θ3", "cos θ3", "tan θ3", "θ3"], answer: "A" },
-        { part: "B", question: "How many joints does the spatial arm have?", options: ["3", "2", "4", "6"], answer: "A" },
-        { part: "B", question: "What type of joints does the spatial arm have?", options: ["Revolute joints", "Prismatic joints", "Spherical joints", "Cylindrical joints"], answer: "A" },
-        { part: "B", question: "What type of motion does the spatial arm produce?", options: ["3D spatial motion", "Planar motion", "1D motion", "Rotational motion only"], answer: "A" },
-        { part: "B", question: "What is the size of the Jacobian for the 3-DOF spatial arm?", options: ["3×3", "2×2", "3×2", "2×3"], answer: "A" },
-        { part: "B", question: "What does each column of the Jacobian represent?", options: ["Endpoint velocity per unit joint velocity with other joints fixed", "Joint torque", "Link length", "Gravity vector"], answer: "A" },
-        { part: "B", question: "What is the geometric meaning of det(J) = 0?", options: ["The column vectors are coplanar", "The column vectors are orthogonal", "The column vectors are zero", "The column vectors are parallel"], answer: "A" },
-        { part: "B", question: "What is the geometric meaning of J2 × J3 = 0?", options: ["J2 and J3 are parallel", "J2 and J3 are perpendicular", "J2 and J3 are zero", "J2 and J3 are skew"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, the arm is fully extended. What is the endpoint's distance from the base?", options: ["Maximum reach", "Minimum reach", "Zero", "l1"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, the arm is fully folded. What is the endpoint's distance from the base?", options: ["Reduced reach (l1 + l2 − l3)", "Maximum reach", "Zero", "l1"], answer: "A" },
-        { part: "B", question: "Which joint provides azimuthal motion?", options: ["Joint 1", "Joint 2", "Joint 3", "None"], answer: "A" },
-        { part: "B", question: "Which joints provide radial motion?", options: ["Joints 2 and 3", "Joint 1 only", "Joint 1 and 2", "None"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, can the endpoint move in the azimuthal direction?", options: ["Yes", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, can the endpoint move in the radial direction?", options: ["Yes", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, can the endpoint move perpendicular to the links in the vertical plane?", options: ["No", "Yes", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, can the endpoint move perpendicular to the links in the vertical plane?", options: ["No", "Yes", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "What is the singularity condition for the 3-DOF arm?", options: ["θ3 = 0 or 180°", "θ1 = 0", "θ2 = 0", "θ1 = θ2 = 0"], answer: "A" },
-        { part: "B", question: "How many singular configurations exist in joint space?", options: ["Two planes", "One point", "One line", "Three points"], answer: "A" },
-        { part: "B", question: "What is the shape of the singular set in joint space?", options: ["Two planes", "A sphere", "A line", "A point"], answer: "A" },
-        { part: "B", question: "What is the shape of the singular set in the workspace?", options: ["Two surfaces (inner and outer boundaries)", "A sphere", "A line", "A point"], answer: "A" },
-        { part: "B", question: "What is the name of the method that uses the Jacobian to coordinate joint velocities?", options: ["Resolved motion rate control", "Inverse kinematics", "Force control", "Impedance control"], answer: "A" },
-        { part: "B", question: "What is the inverse of the Jacobian used for?", options: ["Computing joint velocities from endpoint velocity", "Computing endpoint velocity from joint velocities", "Computing the determinant", "Computing the rank"], answer: "A" },
-        { part: "B", question: "When does the inverse of the Jacobian not exist?", options: ["At singular configurations", "At non-singular configurations", "Always", "Never"], answer: "A" },
-        { part: "B", question: "What is the dimension of the range space at singularity?", options: ["2", "3", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the dimension of the range space at a non-singular posture?", options: ["3", "2", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the left null space at singularity?", options: ["The set of endpoint velocities that cannot be produced", "The set of joint velocities that produce no endpoint motion", "The set of all endpoint velocities", "The set of all joint velocities"], answer: "A" },
-        { part: "B", question: "What is the null space at singularity?", options: ["The set of joint velocities that produce no endpoint motion", "The set of endpoint velocities that cannot be produced", "The set of all endpoint velocities", "The set of all joint velocities"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, the left null space is spanned by which direction?", options: ["Perpendicular to the links in the vertical plane", "Azimuthal", "Radial", "Z-axis"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, the left null space is spanned by which direction?", options: ["Perpendicular to the links in the vertical plane", "Azimuthal", "Radial", "Z-axis"], answer: "A" },
-        { part: "B", question: "What is the manipulability measure at singularity?", options: ["0", "1", "∞", "−1"], answer: "A" },
-        { part: "B", question: "What is the manipulability measure at a non-singular posture?", options: ["Greater than 0", "0", "∞", "−1"], answer: "A" },
-        { part: "B", question: "What happens to the endpoint's velocity ellipsoid at singularity?", options: ["It collapses (one axis becomes zero)", "It becomes a sphere", "It vanishes", "It becomes a line"], answer: "A" },
-        { part: "B", question: "What is the dimension of the velocity ellipsoid at a non-singular posture?", options: ["3", "2", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the dimension of the velocity ellipsoid at singularity?", options: ["2", "3", "1", "0"], answer: "A" },
-        { part: "B", question: "Which direction is lost at θ3 = 0?", options: ["The vertical-plane direction perpendicular to the links", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "B", question: "Which direction is lost at θ3 = 180°?", options: ["The vertical-plane direction perpendicular to the links", "The azimuthal direction", "The radial direction", "The Z-axis"], answer: "A" },
-        { part: "B", question: "What is the physical interpretation of θ3 = 0?", options: ["The arm is fully extended", "The arm is fully folded", "The arm is L-shaped", "The arm is at the origin"], answer: "A" },
-        { part: "B", question: "What is the physical interpretation of θ3 = 180°?", options: ["The arm is fully folded", "The arm is fully extended", "The arm is L-shaped", "The arm is at the origin"], answer: "A" },
-        { part: "B", question: "Which joint angle determines the singularity of the spatial arm?", options: ["θ3", "θ1", "θ2", "All three equally"], answer: "A" },
-        { part: "B", question: "Is θ1 = 0 a singular configuration?", options: ["No", "Yes", "Only if θ2 = 0", "Only if θ3 = 0"], answer: "A" },
-        { part: "B", question: "Is θ2 = 0 a singular configuration?", options: ["No", "Yes", "Only if θ1 = 0", "Only if θ3 = 0"], answer: "A" },
-        { part: "B", question: "Is θ3 = 90° a singular configuration?", options: ["No", "Yes", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "Is θ3 = 0 a singular configuration?", options: ["Yes", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "Is θ3 = 180° a singular configuration?", options: ["Yes", "No", "Only if θ1 = 0", "Only if θ2 = 0"], answer: "A" },
-        { part: "B", question: "What is the determinant of the Jacobian at θ3 = 0?", options: ["0", "1", "∞", "−1"], answer: "A" },
-        { part: "B", question: "What is the determinant of the Jacobian at θ3 = 180°?", options: ["0", "1", "∞", "−1"], answer: "A" },
-        { part: "B", question: "What is the determinant of the Jacobian at θ3 = 90°?", options: ["Nonzero (proportional to sin 90° = 1)", "0", "∞", "−1"], answer: "A" },
-        { part: "B", question: "What is the formula for det(J) for this arm?", options: ["Proportional to sin θ3", "Proportional to cos θ3", "Proportional to tan θ3", "Proportional to θ3"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, J2 and J3 are:", options: ["Parallel", "Perpendicular", "Opposite", "Zero"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, J2 and J3 are:", options: ["Collinear", "Perpendicular", "Zero", "Skew"], answer: "A" },
-        { part: "B", question: "At θ3 = 90°, J2 and J3 are:", options: ["Perpendicular", "Parallel", "Collinear", "Zero"], answer: "A" },
-        { part: "B", question: "What does the Jacobian matrix relate?", options: ["Joint velocities to endpoint velocities", "Joint torques to endpoint forces", "Joint positions to endpoint positions", "Joint accelerations to endpoint accelerations"], answer: "A" },
-        { part: "B", question: "What is the dimension of the Jacobian for a 3-DOF arm in 3D space?", options: ["3×3", "2×2", "3×2", "2×3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the endpoint velocity vector?", options: ["3×1", "2×1", "1×1", "3×3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the joint velocity vector?", options: ["3×1", "2×1", "1×1", "3×3"], answer: "A" },
-        { part: "B", question: "What is the relationship between joint velocities and endpoint velocity?", options: ["v = J q̇", "v = J⁻¹ q̇", "v = Jᵀ q̇", "v = q̇ J"], answer: "A" },
-        { part: "B", question: "What is the relationship between joint velocities and endpoint velocity at a non-singular posture?", options: ["q̇ = J⁻¹ v", "q̇ = J v", "q̇ = Jᵀ v", "q̇ = v J"], answer: "A" },
-        { part: "B", question: "What happens to q̇ = J⁻¹ v at singularity?", options: ["J⁻¹ does not exist, so q̇ blows up", "J⁻¹ exists, so q̇ is finite", "q̇ = 0", "q̇ = v"], answer: "A" },
-        { part: "B", question: "What is the name of the control scheme that uses q̇ = J⁻¹ v?", options: ["Resolved motion rate control", "Inverse kinematics", "Force control", "Impedance control"], answer: "A" },
-        { part: "B", question: "Who is credited with resolved motion rate control?", options: ["Daniel Whitney", "Isaac Newton", "Joseph Lagrange", "Leonhard Euler"], answer: "A" },
-        { part: "B", question: "What is the null space of the Jacobian?", options: ["The set of joint velocities that produce no endpoint motion", "The set of endpoint velocities that cannot be produced", "The set of all joint velocities", "The set of all endpoint velocities"], answer: "A" },
-        { part: "B", question: "What is the range space of the Jacobian?", options: ["The set of all producible endpoint velocities", "The set of joint velocities that produce no endpoint motion", "The set of all joint velocities", "The set of all endpoint velocities"], answer: "A" },
-        { part: "B", question: "What is the dimension of the null space for a 3×3 full-rank Jacobian?", options: ["0", "1", "2", "3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the null space for a 3×3 rank-2 Jacobian?", options: ["1", "0", "2", "3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the range space for a 3×3 rank-2 Jacobian?", options: ["2", "3", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the sum of the dimensions of the range space and null space?", options: ["3 (the number of joints)", "2", "1", "0"], answer: "A" },
-        { part: "B", question: "What is the singular configuration at θ3 = 0 called?", options: ["Outer boundary singularity", "Inner boundary singularity", "Base singularity", "No singularity"], answer: "A" },
-        { part: "B", question: "What is the singular configuration at θ3 = 180° called?", options: ["Inner boundary singularity", "Outer boundary singularity", "Base singularity", "No singularity"], answer: "A" },
-        { part: "B", question: "Why is θ3 = 0 at the outer boundary?", options: ["The arm is fully extended, reaching maximum distance", "The arm is fully folded, reaching minimum distance", "The arm is at the center", "The arm is at the base"], answer: "A" },
-        { part: "B", question: "Why is θ3 = 180° at the inner boundary?", options: ["The arm is fully folded, reaching minimum distance", "The arm is fully extended, reaching maximum distance", "The arm is at the center", "The arm is at the base"], answer: "A" },
-        { part: "B", question: "What is the physical meaning of the blocked direction at singularity?", options: ["The endpoint cannot move in that direction with non-zero velocity", "The endpoint can move in all directions", "The endpoint cannot move at all", "The endpoint moves infinitely fast"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, the blocked direction is perpendicular to the links. What motion does this correspond to?", options: ["Bending the elbow further", "Rotating the base", "Sliding along the link", "Rotating about the link axis"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, the blocked direction is perpendicular to the links. What motion does this correspond to?", options: ["Unfolding the elbow", "Rotating the base", "Sliding along the link", "Rotating about the link axis"], answer: "A" },
-        { part: "B", question: "Which joint is responsible for the azimuthal direction?", options: ["Joint 1", "Joint 2", "Joint 3", "None"], answer: "A" },
-        { part: "B", question: "Which joints are responsible for the radial direction?", options: ["Joints 2 and 3", "Joint 1 only", "Joint 1 and 2", "None"], answer: "A" },
-        { part: "B", question: "At θ3 = 0, which joints are collinear in their effect?", options: ["Joints 2 and 3", "Joints 1 and 2", "Joints 1 and 3", "All three"], answer: "A" },
-        { part: "B", question: "At θ3 = 180°, which joints are collinear in their effect?", options: ["Joints 2 and 3", "Joints 1 and 2", "Joints 1 and 3", "All three"], answer: "A" },
-        { part: "B", question: "What is the dimension of the singular set in joint space?", options: ["2", "1", "0", "3"], answer: "A" },
-        { part: "B", question: "What is the dimension of the singular set in the workspace?", options: ["2", "1", "0", "3"], answer: "A" },
-        { part: "B", question: "What is the main consequence of a singularity for control?", options: ["The Jacobian inverse does not exist, so resolved-rate control fails", "The robot moves faster", "The robot moves slower", "The robot stops working completely"], answer: "A" },
-        { part: "B", question: "How can singularities be avoided?", options: ["By planning trajectories that keep θ3 away from 0 and 180°", "By increasing joint velocities", "By locking Joint 1", "By ignoring them"], answer: "A" }
+        { question: "What is the main focus of differential motion in robotics?", options: ["Determining link materials", "Coordinating joint motions to achieve a desired end-effector velocity", "Calculating only the robot's mass", "Selecting the color of robot links"], answer: "B" },
+        { question: "What does the Jacobian matrix describe for a robot mechanism?", options: ["The relationship between joint displacements and link masses", "The relationship between joint motion and end-effector motion", "The relationship between voltage and temperature", "The relationship between link color and length"], answer: "B" },
+        { question: "For a two-degree-of-freedom planar arm, the Jacobian matrix in the chapter has what dimensions?", options: ["1 by 2", "2 by 1", "2 by 2", "3 by 3"], answer: "C" },
+        { question: "In the differential relationship dx = J dq, what does dq represent?", options: ["A vector of small joint displacements", "A vector of link lengths", "The end-effector's absolute position only", "The mass of each joint"], answer: "A" },
+        { question: "How are the elements of the Jacobian obtained in the two-link planar arm?", options: ["By multiplying the link lengths together", "By taking partial derivatives of end-effector coordinates with respect to joint variables", "By adding all joint angles without differentiation", "By measuring motor temperature"], answer: "B" },
+        { question: "What does each column of the Jacobian represent geometrically?", options: ["The end-effector motion caused by a corresponding joint moving while other joints are fixed", "The total weight of a link", "The maximum link length", "The position of the robot base only"], answer: "A" },
+        { question: "For a two-link planar arm, the second Jacobian column points in which direction relative to link 2?", options: ["Parallel to link 2", "Perpendicular to link 2", "Always along the x-axis", "Always along the y-axis"], answer: "B" },
+        { question: "What is the velocity relationship between the end-effector and the joints?", options: ["v_e = Jq", "v_e = J + q", "v_e = J/q for all configurations", "v_e = q - J"], answer: "A" },
+        { question: "Why do Jacobian column vectors change as the robot arm moves?", options: ["The Jacobian elements depend on the joint configuration", "Link lengths change continuously", "The base coordinate system disappears", "Joint types automatically change"], answer: "A" },
+        { question: "When can a two-link planar robot move its end-effector in arbitrary directions in the plane, according to the chapter's explanation?", options: ["When the Jacobian columns point in different directions and span the plane", "Only when both links are fully extended", "Only when both links are fully contracted", "When both Jacobian columns are zero"], answer: "A" },
+        { question: "What condition identifies a singular configuration using the determinant of a square Jacobian?", options: ["det J = 1", "det J = 0", "det J is always positive", "det J equals the sum of link lengths"], answer: "B" },
+        { question: "For the two-revolute-joint planar arm discussed, at which values of theta_2 does the Jacobian become singular?", options: ["45 degrees and 90 degrees", "30 degrees and 60 degrees", "0 degrees and 180 degrees", "90 degrees and 270 degrees"], answer: "C" },
+        { question: "What is a key consequence of a singular configuration?", options: ["The end-effector can move in every direction more easily", "At least one direction of end-effector velocity cannot be generated", "The robot no longer has any links", "All joint velocities must be zero"], answer: "B" },
+        { question: "What happens to the two Jacobian columns at the singular configurations described for the two-link arm?", options: ["They become aligned", "They become identical in length in every posture", "They always point along perpendicular directions", "They disappear from the matrix"], answer: "A" },
+        { question: "For a non-singular two-degree-of-freedom arm, how can joint velocities be found from a desired end-effector velocity?", options: ["q = J v_e", "q = J^-1 v_e", "q = v_e + J", "q = det(J) v_e"], answer: "B" },
+        { question: "What is the control scheme called that resolves a desired end-effector velocity into individual joint velocities?", options: ["Resolved Motion Rate Control", "Static Load Control", "Link Length Compensation", "Passive Joint Locking"], answer: "A" },
+        { question: "Why may joint velocities change even if the desired end-effector velocity is constant?", options: ["The inverse Jacobian changes with the arm configuration", "The desired velocity must always be zero", "The link lengths become random", "The number of joints changes during motion"], answer: "A" },
+        { question: "In the trajectory example, why do joint velocities become extremely large near certain points?", options: ["The robot is near singular configurations and the equations divide by a value approaching zero", "The end-effector is moving at zero speed", "The links are assumed to have infinite mass", "The coordinate axes rotate without limit"], answer: "A" },
+        { question: "For the two-link planar arm in the chapter, the determinant of the Jacobian is expressed as which quantity?", options: ["cos(theta_2)", "sin(theta_2)", "tan(theta_1)", "cos(theta_1 + theta_2)"], answer: "B" },
+        { question: "When theta_2 = 0 and the links are aligned and extended, which statement matches the chapter's explanation?", options: ["The endpoint cannot generate velocity perpendicular to the aligned links", "The first joint cannot generate any endpoint velocity in every direction", "The Jacobian has full rank in all cases", "The endpoint can move only perpendicular to the links"], answer: "A" },
+        { question: "When theta_2 = pi and the arm is fully contracted in the described example, what happens to the first joint's contribution to endpoint velocity?", options: ["It becomes the largest possible contribution", "It is zero", "It always points along the x-axis", "It becomes independent of the arm posture"], answer: "B" },
+        { question: "What is the range space R(J) of the Jacobian mapping?", options: ["The set of all possible end-effector velocities generated at the current configuration", "The set of all possible link masses", "The set of actuator temperatures", "The set of robot base positions"], answer: "A" },
+        { question: "What is the null space N(J) of the Jacobian mapping?", options: ["Joint velocity vectors that produce a zero end-effector velocity", "End-effector positions outside the workspace only", "All link lengths in the robot", "Joint velocities that always maximize endpoint speed"], answer: "A" },
+        { question: "If the Jacobian has full row rank, what does the chapter state about its range space?", options: ["It covers the entire end-effector velocity space", "It contains only the zero vector", "It has no relationship to end-effector motion", "It must be smaller than every possible line"], answer: "A" },
+        { question: "According to the chapter, what does a redundant robot provide?", options: ["Fewer possible joint configurations for every task", "Additional degrees of freedom that can help maintain task motion when some freedom is lost", "A guarantee that singularities never occur", "A mechanism with no active joints"], answer: "B" },
+        { question: "For a task with m independent end-effector variables and a robot with n joints, when n is greater than m and J has full rank, how many redundant degrees of freedom are present?", options: ["m + n", "m - n", "n - m", "n times m"], answer: "C" },
+        { question: "For spatial motion, how many independent variables may be needed to specify arbitrary end-effector position and orientation in the chapter's general discussion?", options: ["Two", "Three", "Four", "Six"], answer: "D" },
+        { question: "Why might a trajectory be planned to avoid singular configurations?", options: ["Singularities can prevent motion in certain directions and degrade dexterity", "Singularities always reduce the number of links", "A trajectory cannot be described by coordinates", "The robot's joint angles are not measurable"], answer: "A" },
+        { question: "In the general differential kinematic equation dp = J dq, if J has m rows and n columns, what do m and n represent?", options: ["m is the number of task variables and n is the number of joint variables", "m is the number of links and n is the number of motors' colors", "m is the number of singularities and n is the number of paths", "m is always larger than n and both count link lengths"], answer: "A" },
+        { question: "If q* is one solution to Jq = p and q0 is in the null space of J, why is q = q* + kq0 also a solution?", options: ["Because Jq0 = 0, so adding kq0 does not change the resulting end-effector velocity", "Because q0 always equals q*", "Because the Jacobian is always the identity matrix", "Because k must always be zero"], answer: "A" },
+        { question: "Which statement best defines kinematics in robotics?", options: ["The study of forces acting on robot links", "The geometry of motion", "The study of electrical actuator circuits", "The analysis of material strength"], answer: "B" },
+        { question: "What distinguishes a planar robot mechanism in the chapter?", options: ["It moves only in a straight line", "It contains no joints", "It works within a plane", "It must have six degrees of freedom"], answer: "C" },
+        { question: "In the three-link planar serial arm, what type of joints connect the movable links?", options: ["Revolute joints", "Fixed joints only", "Spherical joints", "Gear joints"], answer: "A" },
+        { question: "For the three-revolute-joint planar arm, how is the end-effector orientation represented?", options: ["phi_e = theta_1 - theta_2 - theta_3", "phi_e = theta_1 + theta_2 + theta_3", "phi_e = theta_1 theta_2 theta_3", "phi_e = theta_1 + theta_2 - theta_3"], answer: "B" },
+        { question: "In the planar three-link arm, what does each link length represent?", options: ["The distance between adjacent joint axes", "The angle between two links", "The actuator's rotation speed", "The distance from the end-effector to the base in every configuration"], answer: "A" },
+        { question: "Which expression gives the end-effector x-coordinate for a three-link planar arm?", options: ["x_e = l_1 sin(theta_1) + l_2 sin(theta_1 + theta_2) + l_3 sin(theta_1 + theta_2 + theta_3)", "x_e = l_1 cos(theta_1) + l_2 cos(theta_1 + theta_2) + l_3 cos(theta_1 + theta_2 + theta_3)", "x_e = l_1 + l_2 + l_3", "x_e = l_1 cos(theta_1) + l_2 cos(theta_2) + l_3 cos(theta_3)"], answer: "B" },
+        { question: "Which expression gives the end-effector y-coordinate for the same three-link arm?", options: ["y_e = l_1 cos(theta_1) + l_2 cos(theta_1 + theta_2) + l_3 cos(theta_1 + theta_2 + theta_3)", "y_e = l_1 sin(theta_1) + l_2 sin(theta_1 + theta_2) + l_3 sin(theta_1 + theta_2 + theta_3)", "y_e = l_1 + l_2 + l_3", "y_e = l_1 sin(theta_1) + l_2 sin(theta_2) + l_3 sin(theta_3)"], answer: "B" },
+        { question: "What are forward kinematic equations used to relate?", options: ["Link mass to actuator torque", "Joint displacements to end-effector position and orientation", "Motor voltage to battery capacity", "Robot speed to environmental temperature"], answer: "B" },
+        { question: "How is the displacement of a prismatic joint represented in the chapter?", options: ["By an angle theta_i", "By a distance d_i", "By an orientation phi_e", "By a link length that never changes"], answer: "B" },
+        { question: "How is the displacement of a revolute joint represented?", options: ["By a distance d_i only", "By an angle theta_i", "By the end-effector x-coordinate", "By the number of links"], answer: "B" },
+        { question: "For a planar mechanism, which vector represents end-effector position and orientation?", options: ["p = [x_e, y_e, phi_e]^T", "p = [theta_1, theta_2, theta_3]^T only", "p = [l_1, l_2, l_3]^T", "p = [d_1, d_2, d_3]^T only"], answer: "A" },
+        { question: "In the notation p = f(q), what does q represent?", options: ["The vector of joint displacements", "The vector of link masses", "The end-effector orientation alone", "The set of external forces"], answer: "A" },
+        { question: "When is a robot mechanism described as under-actuated in the chapter?", options: ["When every link has its own actuator", "When a link's location is not fully determined by actuator displacements", "When it has more than six degrees of freedom", "When all joints are prismatic"], answer: "B" },
+        { question: "For a serial link mechanism, joint displacements are generalized coordinates when they form a set that is:", options: ["Dependent and incomplete", "Complete and independent", "Fixed at zero", "Unrelated to robot configuration"], answer: "B" },
+        { question: "What is the direct kinematics problem?", options: ["Finding joint displacements from a desired end-effector location", "Evaluating end-effector position and orientation from known joint displacements", "Finding the mass of each link", "Determining actuator electrical resistance"], answer: "B" },
+        { question: "What is the inverse kinematics problem?", options: ["Finding joint displacements for a specified end-effector position and orientation", "Finding end-effector coordinates from known joint angles only", "Calculating link lengths from their material", "Measuring the robot's power consumption"], answer: "A" },
+        { question: "Why can inverse kinematics be more complex than direct kinematics?", options: ["It never uses joint variables", "It may have multiple solutions or no solution for a desired location", "It always has exactly one solution", "It applies only to fixed links"], answer: "B" },
+        { question: "Why might numerical methods be used for inverse kinematics?", options: ["Kinematic equations may be nonlinear and lack a closed-form solution", "Link lengths are never known", "The end-effector has no coordinates", "Revolute joints cannot be measured"], answer: "A" },
+        { question: "In the inverse kinematics example, what is the purpose of finding the wrist point first?", options: ["To eliminate the need for joint angles", "To calculate a point one final-link length back from the end-effector", "To calculate the robot's mass center", "To replace the base coordinate system"], answer: "B" },
+        { question: "Given end-effector pose (x_e, y_e, phi_e) and final link length l_3, which expression gives wrist x-coordinate?", options: ["x_w = x_e + l_3 cos(phi_e)", "x_w = x_e - l_3 cos(phi_e)", "x_w = y_e - l_3 sin(phi_e)", "x_w = x_e - l_3 sin(phi_e)"], answer: "B" },
+        { question: "For the wrist point, what does r^2 = x_w^2 + y_w^2 represent?", options: ["The squared distance from the base origin to the wrist", "The squared length of the final link only", "The end-effector orientation", "The sum of all joint angles"], answer: "A" },
+        { question: "Which geometric method is used to derive the elbow-angle relationship in the two-link inverse kinematics example?", options: ["Pythagorean theorem only", "Law of cosines", "Law of reflection", "Matrix inversion only"], answer: "B" },
+        { question: "What are the two configurations identified for the same end-effector pose in the serial-arm example?", options: ["Left and right", "Fast and slow", "Elbow-up and elbow-down", "Open-loop and closed-loop"], answer: "C" },
+        { question: "Why should inverse-kinematics solutions be checked against joint stroke limits?", options: ["A mathematical solution may not be physically feasible", "Stroke limits determine link material", "They convert revolute joints into fixed joints", "They guarantee there is only one solution"], answer: "A" },
+        { question: "In the five-bar parallel-link mechanism, how is Joint 2 characterized in the example?", options: ["As the only fixed joint", "As a passive joint with a dependent angle", "As an independent prismatic joint", "As the end-effector itself"], answer: "B" },
+        { question: "In the five-bar mechanism, why are constraint equations formed for point A?", options: ["Point A must have coordinates consistent with both link branches", "Point A is outside the mechanism", "The links have no geometric relationship", "Point A's coordinates are always zero"], answer: "A" },
+        { question: "In the five-bar mechanism example, four variables and two constraint equations imply that:", options: ["All four variables must be independent", "Two variables can be chosen as independent variables", "No variables can be solved", "The mechanism has no degrees of freedom"], answer: "B" },
+        { question: "What is the outlined inverse-kinematics procedure for the five-bar mechanism intended to find first?", options: ["The robot's link masses", "The joint angles theta_1 and theta_2 from the desired endpoint position", "The motor voltage", "The end-effector orientation in three-dimensional space"], answer: "B" },
+        { question: "According to the chapter, how many degrees of freedom must a manipulator arm have to position its end-effector at an arbitrary point with arbitrary orientation in space?", options: ["Two", "Three", "Four", "Six"], answer: "D" },
+        { question: "What makes a manipulator with more than six degrees of freedom redundant?", options: ["It cannot change its joint positions", "It can have infinitely many joint-displacement solutions for the same end-effector location", "It has no active joints", "It can move only in a plane"], answer: "B" },
+        { question: "Which statement best defines kinematics in robotics?", options: ["The study of forces acting on robot links", "The geometry of motion", "The study of electrical actuator circuits", "The analysis of material strength"], answer: "B" },
+        { question: "What distinguishes a planar robot mechanism in the chapter?", options: ["It moves only in a straight line", "It contains no joints", "It works within a plane", "It must have six degrees of freedom"], answer: "C" },
+        { question: "In the three-link planar serial arm, what type of joints connect the movable links?", options: ["Revolute joints", "Fixed joints only", "Spherical joints", "Gear joints"], answer: "A" },
+        { question: "For the three-revolute-joint planar arm, how is the end-effector orientation represented?", options: ["phi_e = theta_1 - theta_2 - theta_3", "phi_e = theta_1 + theta_2 + theta_3", "phi_e = theta_1 theta_2 theta_3", "phi_e = theta_1 + theta_2 - theta_3"], answer: "B" },
+        { question: "In the planar three-link arm, what does each link length represent?", options: ["The distance between adjacent joint axes", "The angle between two links", "The actuator's rotation speed", "The distance from the end-effector to the base in every configuration"], answer: "A" },
+        { question: "Which expression gives the end-effector x-coordinate for a three-link planar arm?", options: ["x_e = l_1 sin(theta_1) + l_2 sin(theta_1 + theta_2) + l_3 sin(theta_1 + theta_2 + theta_3)", "x_e = l_1 cos(theta_1) + l_2 cos(theta_1 + theta_2) + l_3 cos(theta_1 + theta_2 + theta_3)", "x_e = l_1 + l_2 + l_3", "x_e = l_1 cos(theta_1) + l_2 cos(theta_2) + l_3 cos(theta_3)"], answer: "B" },
+        { question: "Which expression gives the end-effector y-coordinate for the same three-link arm?", options: ["y_e = l_1 cos(theta_1) + l_2 cos(theta_1 + theta_2) + l_3 cos(theta_1 + theta_2 + theta_3)", "y_e = l_1 sin(theta_1) + l_2 sin(theta_1 + theta_2) + l_3 sin(theta_1 + theta_2 + theta_3)", "y_e = l_1 + l_2 + l_3", "y_e = l_1 sin(theta_1) + l_2 sin(theta_2) + l_3 sin(theta_3)"], answer: "B" },
+        { question: "What are forward kinematic equations used to relate?", options: ["Link mass to actuator torque", "Joint displacements to end-effector position and orientation", "Motor voltage to battery capacity", "Robot speed to environmental temperature"], answer: "B" },
+        { question: "How is the displacement of a prismatic joint represented in the chapter?", options: ["By an angle theta_i", "By a distance d_i", "By an orientation phi_e", "By a link length that never changes"], answer: "B" },
+        { question: "How is the displacement of a revolute joint represented?", options: ["By a distance d_i only", "By an angle theta_i", "By the end-effector x-coordinate", "By the number of links"], answer: "B" },
+        { question: "For a planar mechanism, which vector represents end-effector position and orientation?", options: ["p = [x_e, y_e, phi_e]^T", "p = [theta_1, theta_2, theta_3]^T only", "p = [l_1, l_2, l_3]^T", "p = [d_1, d_2, d_3]^T only"], answer: "A" },
+        { question: "In the notation p = f(q), what does q represent?", options: ["The vector of joint displacements", "The vector of link masses", "The end-effector orientation alone", "The set of external forces"], answer: "A" },
+        { question: "When is a robot mechanism described as under-actuated in the chapter?", options: ["When every link has its own actuator", "When a link's location is not fully determined by actuator displacements", "When it has more than six degrees of freedom", "When all joints are prismatic"], answer: "B" },
+        { question: "For a serial link mechanism, joint displacements are generalized coordinates when they form a set that is:", options: ["Dependent and incomplete", "Complete and independent", "Fixed at zero", "Unrelated to robot configuration"], answer: "B" },
+        { question: "What is the direct kinematics problem?", options: ["Finding joint displacements from a desired end-effector location", "Evaluating end-effector position and orientation from known joint displacements", "Finding the mass of each link", "Determining actuator electrical resistance"], answer: "B" },
+        { question: "What is the inverse kinematics problem?", options: ["Finding joint displacements for a specified end-effector position and orientation", "Finding end-effector coordinates from known joint angles only", "Calculating link lengths from their material", "Measuring the robot's power consumption"], answer: "A" },
+        { question: "Why can inverse kinematics be more complex than direct kinematics?", options: ["It never uses joint variables", "It may have multiple solutions or no solution for a desired location", "It always has exactly one solution", "It applies only to fixed links"], answer: "B" },
+        { question: "Why might numerical methods be used for inverse kinematics?", options: ["Kinematic equations may be nonlinear and lack a closed-form solution", "Link lengths are never known", "The end-effector has no coordinates", "Revolute joints cannot be measured"], answer: "A" },
+        { question: "In the inverse kinematics example, what is the purpose of finding the wrist point first?", options: ["To eliminate the need for joint angles", "To calculate a point one final-link length back from the end-effector", "To calculate the robot's mass center", "To replace the base coordinate system"], answer: "B" },
+        { question: "Given end-effector pose (x_e, y_e, phi_e) and final link length l_3, which expression gives wrist x-coordinate?", options: ["x_w = x_e + l_3 cos(phi_e)", "x_w = x_e - l_3 cos(phi_e)", "x_w = y_e - l_3 sin(phi_e)", "x_w = x_e - l_3 sin(phi_e)"], answer: "B" },
+        { question: "For the wrist point, what does r^2 = x_w^2 + y_w^2 represent?", options: ["The squared distance from the base origin to the wrist", "The squared length of the final link only", "The end-effector orientation", "The sum of all joint angles"], answer: "A" },
+        { question: "Which geometric method is used to derive the elbow-angle relationship in the two-link inverse kinematics example?", options: ["Pythagorean theorem only", "Law of cosines", "Law of reflection", "Matrix inversion only"], answer: "B" },
+        { question: "What are the two configurations identified for the same end-effector pose in the serial-arm example?", options: ["Left and right", "Fast and slow", "Elbow-up and elbow-down", "Open-loop and closed-loop"], answer: "C" },
+        { question: "Why should inverse-kinematics solutions be checked against joint stroke limits?", options: ["A mathematical solution may not be physically feasible", "Stroke limits determine link material", "They convert revolute joints into fixed joints", "They guarantee there is only one solution"], answer: "A" },
+        { question: "In the five-bar parallel-link mechanism, how is Joint 2 characterized in the example?", options: ["As the only fixed joint", "As a passive joint with a dependent angle", "As an independent prismatic joint", "As the end-effector itself"], answer: "B" },
+        { question: "In the five-bar mechanism, why are constraint equations formed for point A?", options: ["Point A must have coordinates consistent with both link branches", "Point A is outside the mechanism", "The links have no geometric relationship", "Point A's coordinates are always zero"], answer: "A" },
+        { question: "In the five-bar mechanism example, four variables and two constraint equations imply that:", options: ["All four variables must be independent", "Two variables can be chosen as independent variables", "No variables can be solved", "The mechanism has no degrees of freedom"], answer: "B" },
+        { question: "What is the outlined inverse-kinematics procedure for the five-bar mechanism intended to find first?", options: ["The robot's link masses", "The joint angles theta_1 and theta_2 from the desired endpoint position", "The motor voltage", "The end-effector orientation in three-dimensional space"], answer: "B" },
+        { question: "According to the chapter, how many degrees of freedom must a manipulator arm have to position its end-effector at an arbitrary point with arbitrary orientation in space?", options: ["Two", "Three", "Four", "Six"], answer: "D" },
+        { question: "What makes a manipulator with more than six degrees of freedom redundant?", options: ["It cannot change its joint positions", "It can have infinitely many joint-displacement solutions for the same end-effector location", "It has no active joints", "It can move only in a plane"], answer: "B" },
+        { question: "What is the central question that robotics addresses according to the introduction?", options: ["How can a machine eliminate all human workers?", "How can a machine avoid using sensors entirely?", "How can a machine operate without mechanical components?", "How can a machine sense, decide and act in the physical world?"], answer: "D" },
+        { question: "Which sequence best represents the typical robot operating cycle?", options: ["Decide → Sense → Act → Process", "Act → Sense → Process → Decide", "Sense → Process → Decide → Act", "Process → Act → Sense → Decide"], answer: "C" },
+        { question: "Which combination most accurately describes robotics as an interdisciplinary field?", options: ["Civil engineering, chemistry, geology and accounting", "Mechanical engineering, electronics, programming, control and AI", "Only programming and artificial intelligence", "Only mechanical engineering and manufacturing"], answer: "B" },
+        { question: "Which characteristic distinguishes a robot in the provided introduction?", options: ["It is programmable and can perform physical tasks automatically or semi-autonomously", "It must always be controlled continuously by a human", "It can perform only digital calculations", "It must have a humanoid body"], answer: "A" },
+        { question: "Why are robots particularly valuable for hazardous tasks?", options: ["They require no power supply in hazardous environments", "They eliminate the need for any safety system", "They can operate without mechanical components", "They can operate in environments such as nuclear facilities, deep oceans and hazardous factories"], answer: "D" },
+        { question: "Which application is specifically associated with healthcare robotics in the source?", options: ["Crop harvesting and irrigation", "Warehouse transport only", "Surgery assistance and rehabilitation", "Deep-sea mapping only"], answer: "C" },
+        { question: "Which component provides the structural support for a robot?", options: ["Software", "Sensor", "Controller", "Mechanical structure"], answer: "D" },
+        { question: "What is the primary function of a robot end effector?", options: ["To provide electrical power to every joint", "To calculate all robot trajectories", "To perform the task or interact with objects", "To measure only joint temperature"], answer: "C" },
+        { question: "Which sensor is most directly associated with measuring joint position?", options: ["Encoder", "IMU", "LiDAR", "Camera"], answer: "A" },
+        { question: "Which sensor is especially associated with mapping and navigation?", options: ["Force/torque sensor", "Servo motor", "Encoder", "LiDAR"], answer: "D" },
+        { question: "What does an IMU primarily help a robot determine?", options: ["End-effector grip type", "Hydraulic pressure only", "Joint material strength", "Orientation and motion"], answer: "D" },
+        { question: "Which actuator type is identified as suitable for high-force applications?", options: ["Pneumatic", "DC", "Hydraulic", "Stepper"], answer: "C" },
+        { question: "What is the typical actuation chain presented in the introduction?", options: ["Driver → Sensor → Joint → Controller", "Joint → Controller → Driver → Sensor", "Sensor → Actuator → Controller → Joint", "Controller → Driver → Actuator → Joint"], answer: "D" },
+        { question: "What is the main role of the robot controller?", options: ["Read sensor data, run control algorithms and generate actuator commands", "Act as the physical end effector", "Provide all mechanical support to the robot", "Convert hydraulic pressure directly into electricity"], answer: "A" },
+        { question: "What does degrees of freedom represent in a mechanism?", options: ["The number of motors regardless of their motion", "The number of software programs installed", "The number of independent motions the mechanism can perform", "The number of sensors mounted on the robot"], answer: "C" },
+        { question: "What can a 6-DOF manipulator generally control?", options: ["Only three-dimensional position", "Three-dimensional position and three-dimensional orientation", "Only orientation around one axis", "Only linear motion"], answer: "B" },
+        { question: "What is the defining motion of a revolute joint?", options: ["Translation along an axis", "Rotation about an axis", "No relative motion", "Rotation and translation only in separate mechanisms"], answer: "B" },
+        { question: "What is the defining motion of a prismatic joint?", options: ["Rotation about an axis", "No relative motion", "Linear translation along an axis", "Multi-axis rotation only"], answer: "C" },
+        { question: "What combination does a cylindrical joint provide?", options: ["Three independent rotations", "No relative motion", "Only fixed translation", "Rotation and translation about the same axis"], answer: "D" },
+        { question: "Which coordinate quantities describe Cartesian position?", options: ["Roll, pitch and yaw", "Radius, angle and pressure", "Torque, force and speed", "X, Y and Z"], answer: "D" },
+        { question: "Which quantities are commonly used to describe orientation?", options: ["Force, torque and mass", "X, Y and Z", "Roll, pitch and yaw", "Speed, acceleration and distance"], answer: "C" },
+        { question: "Which robot configuration is associated with linear X-Y-Z axes?", options: ["SCARA", "Articulated", "Delta", "Cartesian"], answer: "D" },
+        { question: "Which configuration is particularly associated with fast assembly and pick-and-place?", options: ["Hydraulic", "SCARA", "Spherical", "Cartesian"], answer: "B" },
+        { question: "Which configuration uses multiple rotary joints?", options: ["Prismatic", "Cartesian", "Articulated", "Cylindrical"], answer: "C" },
+        { question: "Which robot configuration is noted for high-speed pick-and-place?", options: ["Cartesian", "Delta", "Articulated", "Fixed"], answer: "B" },
+        { question: "What is velocity in the context of robot motion?", options: ["The rate of change of position", "The rate of change of acceleration", "The distance from the base to the sensor", "The amount of torque at a joint"], answer: "A" },
+        { question: "What is acceleration?", options: ["The rate at which position changes only", "The rate at which velocity changes", "The actuator torque divided by mass", "The total distance traveled"], answer: "B" },
+        { question: "What does motion planning determine?", options: ["The number of sensors required", "The voltage of every actuator", "A safe path from start to goal", "The material of each robot link"], answer: "C" },
+        { question: "What is the main distinction of a closed-loop control system?", options: ["It never uses sensors", "It cannot correct errors", "It sends commands without any feedback", "It uses sensor feedback to compare actual behavior with the desired value"], answer: "D" },
+        { question: "How is control error defined in the source?", options: ["Desired value + Actual value", "Actual value − Desired value", "Desired value − Actual value", "Actual value × Desired value"], answer: "C" },
+        { question: "What does perception do with raw sensor data?", options: ["Deletes all environmental information", "Replaces the robot controller", "Converts it into useful information", "Converts it directly into mechanical torque"], answer: "C" },
+        { question: "Which sequence best represents obstacle avoidance in the source?", options: ["Plan path → ignore obstacle → continue → detect", "Continue → detect obstacle → stop sensing → plan", "Detect obstacle → plan path → avoid → continue", "Actuate → delete map → detect → continue"], answer: "C" },
+        { question: "How does AI extend traditional robot behavior?", options: ["It prevents robots from using sensors", "It limits robots to fixed trajectories", "It removes the need for actuators", "It can support recognition, learning, planning and adaptation"], answer: "D" },
+        { question: "Which function is central to an autonomous mobile robot?", options: ["Only end-effector gripping", "Localization, mapping, path planning and obstacle avoidance", "Only joint torque control", "Only welding and painting"], answer: "B" },
+        { question: "Which item is an example of a robot safety measure?", options: ["Disabling collision detection", "Increasing backlash", "Removing barriers", "Emergency stop"], answer: "D" },
+        { question: "What is the primary structural role of a robot frame?", options: ["Generate electrical power", "Measure joint angles", "Support components, transfer loads and maintain alignment", "Perform welding directly"], answer: "C" },
+        { question: "What is the main distinction between a frame and a link?", options: ["A frame is a supporting structure, while a link is a rigid member connecting joints", "A frame is software, while a link is a controller", "A frame is an actuator, while a link is a sensor", "A frame always rotates, while a link never exists"], answer: "A" },
+        { question: "What is a major mechanical function of robot links?", options: ["They generate electrical energy", "They eliminate joint motion", "They connect joints and transfer forces", "They replace all sensors"], answer: "C" },
+        { question: "Which architecture connects links sequentially?", options: ["Serial", "Hybrid only", "Fixed", "Parallel"], answer: "A" },
+        { question: "What characterizes a parallel robot structure?", options: ["All joints are fixed", "Multiple chains connect the base to the end effector", "It contains no closed kinematic chain", "Every link is connected to only one sensor"], answer: "B" },
+        { question: "Which material is listed as a possible robot frame material?", options: ["Concrete only", "Glass only", "Rubber only", "Carbon fiber"], answer: "D" },
+        { question: "Which frame parameter describes resistance to deformation?", options: ["Reach", "Velocity", "Payload", "Stiffness"], answer: "D" },
+        { question: "Why is excessive structural bending undesirable?", options: ["It guarantees higher payload capability", "It always increases accuracy", "It eliminates inertia", "It can cause positioning error, vibration and poor repeatability"], answer: "D" },
+        { question: "What does a robotic joint do?", options: ["Stores sensor data permanently", "Converts electricity into software", "Provides only structural mass", "Connects two links and permits controlled relative motion"], answer: "D" },
+        { question: "How many DOF can a rigid body have in three-dimensional space?", options: ["Eight", "Four", "Six", "Three"], answer: "C" },
+        { question: "What are the six rigid-body DOF in 3D?", options: ["Six translations", "Two translations and four rotations", "Three translations and three rotations", "Six rotations"], answer: "C" },
+        { question: "What is the DOF of a revolute joint described in the mechanical-design source?", options: ["Two", "Zero", "Six", "One"], answer: "D" },
+        { question: "What is the DOF of a prismatic joint described in the mechanical-design source?", options: ["Two", "Zero", "One", "Three"], answer: "C" },
+        { question: "What is the DOF of a cylindrical joint?", options: ["Two", "One", "Three", "Six"], answer: "A" },
+        { question: "What is the purpose of joint limits?", options: ["To protect the mechanism and constrain motion", "To increase structural deformation", "To eliminate the need for sensors", "To increase backlash"], answer: "A" },
+        { question: "What is robot workspace?", options: ["The electrical power range of the controller", "The set of possible software commands", "The area occupied by the battery only", "The region reachable by the end effector"], answer: "D" },
+        { question: "Which factor can affect workspace?", options: ["Link lengths and joint limits", "Only battery voltage", "Only controller memory", "Only frame color"], answer: "A" },
+        { question: "What does an actuator convert into controlled mechanical motion?", options: ["Energy", "Software code", "Sensor data", "Coordinate frames"], answer: "A" },
+        { question: "Which actuator is described as the robot's 'muscle'?", options: ["Controller", "Actuator", "Frame", "Encoder"], answer: "B" },
+        { question: "Which actuator combines a motor with feedback and a controller/drive?", options: ["Servo motor", "Pneumatic cylinder", "Stepper motor", "Hydraulic pump"], answer: "A" },
+        { question: "What is a key advantage of a stepper motor?", options: ["Only high-speed operation", "Unlimited torque under every load", "No possibility of losing steps", "Simple incremental control and good low-speed positioning"], answer: "D" },
+        { question: "What is a limitation of a stepper motor identified in the source?", options: ["It can lose steps under excessive load", "It always requires hydraulic fluid", "It cannot move in discrete increments", "It cannot hold position at standstill"], answer: "A" },
+        { question: "What powers a pneumatic actuator?", options: ["Compressed air", "Direct sunlight", "Mechanical springs only", "Pressurized oil"], answer: "A" },
+        { question: "What is a major characteristic of hydraulic actuators?", options: ["No need for fluid lines", "High force density", "Very low force capability", "Operation without pressure"], answer: "B" },
+        { question: "Which actuator type is associated with fast repetitive industrial motion?", options: ["Stepper", "Hydraulic", "DC only", "Pneumatic"], answer: "D" },
+        { question: "Which actuator type is primarily associated with very high force?", options: ["DC", "Hydraulic", "Pneumatic", "Stepper"], answer: "B" },
+        { question: "What is a key consideration when selecting an actuator?", options: ["Only frame color", "Only robot height", "Only software language", "Torque or force, speed, acceleration and position accuracy"], answer: "D" },
+        { question: "What is the purpose of bearings in robotic joints?", options: ["Replace the actuator", "Generate sensor data", "Reduce friction, support loads and maintain alignment", "Increase backlash"], answer: "C" },
+        { question: "Which bearing type is listed among common robotic bearing types?", options: ["Tapered roller bearing", "Magnetic tape bearing", "Wooden bearing", "Air bearing only"], answer: "A" },
+        { question: "What is the main function of a gearbox in robotics?", options: ["Replace all feedback sensors", "Increase speed while eliminating torque", "Measure joint position", "Reduce speed and increase output torque"], answer: "D" },
+        { question: "Which relationship is given for gearbox output torque?", options: ["T_out = T_motor ÷ G × η", "T_out = T_motor × G × η", "T_out = T_motor + G + η", "T_out = G ÷ T_motor × η"], answer: "B" },
+        { question: "What is backlash?", options: ["The robot's total workspace", "The maximum actuator torque", "A type of position sensor", "Unwanted mechanical play that can reduce accuracy and repeatability"], answer: "D" },
+        { question: "Why can longer robot links increase actuator requirements?", options: ["They eliminate payload effects", "They always reduce torque", "They generally increase torque and inertia", "They make the robot massless"], answer: "C" },
+        { question: "What is the torque relation for a simple load given in the source?", options: ["τ = F + r", "τ = r ÷ F", "τ = F ÷ r", "τ = F × r"], answer: "D" },
+        { question: "For a hanging mass, what torque expression is provided?", options: ["τ = mg/r", "τ = mgr", "τ = gr/m", "τ = m/r"], answer: "B" },
+        { question: "Which design trade-off is explicitly identified?", options: ["Lightweight structures always increase stiffness", "Longer links increase reach but also increase torque and inertia", "Longer links always reduce workspace", "Larger motors always reduce mass and cost"], answer: "B" },
+        { question: "What is the function of an end effector in the mechanical architecture?", options: ["It increases gearbox ratio", "It performs the task", "It provides joint feedback", "It supports the base"], answer: "B" },
+        { question: "Which sequence represents the complete mechanical/control architecture?", options: ["Controller → Motor Drive → Actuator → Joint → Link → Joint → End Effector", "Actuator → Controller → Frame → Sensor → Joint", "Sensor → End Effector → Controller → Frame", "End Effector → Link → Sensor → Battery → Controller"], answer: "A" },
+        { question: "What happens when sensors provide feedback to the controller?", options: ["They help close the control loop", "They prevent the controller from receiving information", "They make the robot open-loop", "They eliminate the need for actuators"], answer: "A" },
+        { question: "What is the main advantage of a serial linkage for analysis and control?", options: ["It always has a closed-loop constraint", "It cannot be controlled by individual actuators", "All joints must be passive", "Its joint displacements are independent generalized coordinates"], answer: "D" },
+        { question: "What is a robot mechanism according to the mechanisms reading?", options: ["A software-only simulation", "A single electronic circuit without moving parts", "A multi-body system with multiple bodies connected together", "Only a collection of sensors"], answer: "C" },
+        { question: "What is a rigid body called in a robot mechanism?", options: ["Workspace", "Controller", "Link", "Actuator"], answer: "C" },
+        { question: "What is a combination of links called?", options: ["End effector", "Controller", "Linkage", "Encoder"], answer: "C" },
+        { question: "Which two primitive joint types are emphasized in the mechanisms reading?", options: ["Fixed and helical", "Spherical and fixed", "Cylindrical and spherical", "Prismatic and revolute"], answer: "D" },
+        { question: "What does a prismatic joint allow between two links?", options: ["Translational displacement along a fixed axis", "Rotation about a fixed axis", "No relative displacement", "Three-axis rotation"], answer: "A" },
+        { question: "What does a revolute joint allow between two links?", options: ["Rotation about a fixed axis", "Translation along a straight line only", "No relative motion", "Six independent motions"], answer: "A" },
+        { question: "How many prismatic joints are used in the Cartesian coordinate robot described in the reading?", options: ["One", "Six", "Three", "Two"], answer: "C" },
+        { question: "What joint combination is described for the cylindrical robot?", options: ["Three prismatic joints", "One revolute and two prismatic joints", "Three revolute joints", "Two revolute and one spherical joint"], answer: "B" },
+        { question: "What joint combination is described for the spherical robot?", options: ["One revolute and two fixed joints", "Three prismatic joints", "Three spherical joints", "Two revolute and one prismatic joint"], answer: "D" },
+        { question: "What is a notable application advantage of the SCARA structure?", options: ["It is designed exclusively for underwater locomotion", "It provides only vertical motion", "It has no revolute joints", "It has a wide horizontal workspace and an independent vertical axis suitable for insertion"], answer: "D" },
+        { question: "What joint structure does the articulated robot in the mechanisms reading use?", options: ["Two spherical and one fixed joint", "Three revolute joints", "One revolute and two prismatic joints", "Three prismatic joints"], answer: "B" },
+        { question: "Why is the articulated robot described as versatile?", options: ["It has no movable joints", "It uses only linear motion", "Its revolute-joint structure provides a high degree of flexibility", "It has no end effector"], answer: "C" },
+        { question: "What is a serial linkage?", options: ["A mechanism with only closed loops", "A mechanism containing only passive joints", "A mechanism with no generalized coordinates", "A mechanism in which joints and links are connected sequentially"], answer: "D" },
+        { question: "What distinguishes a parallel linkage from a serial linkage?", options: ["A parallel linkage has no joints", "A serial linkage always has closed loops", "A parallel linkage cannot carry loads", "A parallel linkage can form a closed kinematic chain with geometric constraints"], answer: "D" },
+        { question: "In the five-bar parallel mechanism described, how many joints are actively driven?", options: ["One", "Five", "Two", "Three"], answer: "C" },
+        { question: "Why can independently driving more than two joints in that five-bar mechanism create a conflict?", options: ["The robot has no actuators", "The closed-loop kinematic chain imposes geometric constraints", "All five joints are fixed", "The end effector has no position"], answer: "B" },
+        { question: "What is one advantage of placing both actuators at the base of a parallel mechanism?", options: ["The links become infinitely long", "The robot arm can be lighter", "The mechanism loses all load capacity", "The workspace becomes zero"], answer: "B" },
+        { question: "Why can a parallel mechanism support a larger end-effector load?", options: ["Multiple linkage arms can share the load", "It has no structural links", "Only one joint carries the entire load", "It uses no actuators"], answer: "A" },
+        { question: "What is the Stewart mechanism described in the mechanisms reading?", options: ["A moving platform connected to a fixed base by six powered cylinders", "A three-link serial arm with one motor", "A Cartesian robot with three prismatic joints", "A SCARA robot with two revolute joints"], answer: "A" },
+        { question: "What primarily determines the position and orientation of the Stewart mechanism's moving platform?", options: ["Two fixed links", "Six independent actuators", "Three sensors only", "One passive joint"], answer: "B" },
+        { question: "Why can the Stewart mechanism have large load capacity and fast dynamic response?", options: ["The load is borne by six arms", "It uses only one actuator", "It eliminates all joints", "It has no moving platform"], answer: "A" },
+        { question: "What is kinematics described as in the planar kinematics source?", options: ["Measurement of material strength", "Geometry of motion", "Study of electrical power", "Analysis of battery chemistry"], answer: "B" },
+        { question: "Why is planar kinematics useful in robotics?", options: ["It eliminates joint variables", "It is mathematically more tractable than general three-dimensional kinematics", "It cannot describe robot mechanisms", "It requires no geometry"], answer: "B" },
+        { question: "In the three-DOF planar robot example, what type of joints connect the movable links?", options: ["Revolute joints", "Prismatic joints", "Spherical joints", "Fixed joints"], answer: "A" },
+        { question: "How is a link length defined in the planar robot example?", options: ["As the distance from the battery to the controller", "As the actuator torque divided by speed", "As the joint angle itself", "As the distance between adjacent joint axes"], answer: "D" }
     ];
 
     // ------------------------------------------------------------------
     // 2. STATE & RENDERING
     // ------------------------------------------------------------------
-    let questions = [];          // array of question objects after shuffle
-    let userAnswers = {};        // key: questionIndex -> { selected: 'A'..'D', correct: 'A'..'D' }
+    let questions = [];          // array of question objects after initial load / shuffle
+    let userAnswers = {};        // key: questionIndex -> { selected: 'A'..'D' }
     let correctCount = 0;
     let incorrectCount = 0;
 
@@ -531,11 +460,11 @@
     const correctSpan = document.getElementById('correctCount');
     const incorrectSpan = document.getElementById('incorrectCount');
     const totalSpan = document.getElementById('totalCount');
+    const subtitle = document.getElementById('subtitle');
 
     // helper: deep clone
     function cloneData(data) {
         return data.map(q => ({
-            part: q.part,
             question: q.question,
             options: [...q.options],
             answer: q.answer
@@ -552,35 +481,26 @@
     }
 
     // create a shuffled version: shuffle question order + shuffle options within each question
-    // IMPORTANT: keep answer letter consistent with new option positions
     function buildShuffledQuestions() {
         const cloned = cloneData(rawData);
-
-        // shuffle question order
         shuffleArray(cloned);
 
-        // for each question, shuffle options and update answer letter
         for (let q of cloned) {
-            const oldAnswer = q.answer;                 // 'A','B','C','D'
+            const oldAnswer = q.answer;
             const oldOptions = [...q.options];
-            // build list of option objects
             let optObjects = oldOptions.map((text, idx) => ({
                 text: text,
-                letter: String.fromCharCode(65 + idx)   // 'A','B','C','D'
+                letter: String.fromCharCode(65 + idx)
             }));
-            // shuffle
             shuffleArray(optObjects);
-            // find where oldAnswer is now
             const newAnswerObj = optObjects.find(o => o.letter === oldAnswer);
-            // rebuild q.options in new order, and set new answer letter
             q.options = optObjects.map(o => o.text);
             const newIndex = optObjects.indexOf(newAnswerObj);
-            q.answer = String.fromCharCode(65 + newIndex);   // 'A','B','C','D'
+            q.answer = String.fromCharCode(65 + newIndex);
         }
         return cloned;
     }
 
-    // full reset: build fresh shuffled questions, clear answers, re-render
     function resetAndShuffle() {
         questions = buildShuffledQuestions();
         userAnswers = {};
@@ -590,12 +510,6 @@
         renderAll();
     }
 
-    // initial (non-shuffled) load – we still use buildShuffledQuestions? 
-    // For first load, we want original order to preserve Part A then Part B.
-    // Let's use original order but still shuffle options within each question? 
-    // The user said "aik dafa sary hony ky bad inky options or khud mcqs bhi swap ho jain" 
-    // => after finishing, shuffle BOTH. First load should be original order, original options.
-    // We'll build initial questions as deep clone of rawData (no shuffle).
     function buildInitialQuestions() {
         return cloneData(rawData);
     }
@@ -603,48 +517,35 @@
     // render all question cards
     function renderAll() {
         let html = '';
-        let currentPart = '';
-
         questions.forEach((q, idx) => {
-            if (q.part !== currentPart) {
-                currentPart = q.part;
-                html += `<div class="section-label">${currentPart === 'A' ? 'PART A : Scenario‑Based MCQs' : 'PART B : Simple MCQs'}</div>`;
-            }
-
-            const ua = userAnswers[idx];   // may be undefined
+            const ua = userAnswers[idx];
             const selectedLetter = ua ? ua.selected : null;
             const isCorrect = ua ? (selectedLetter === q.answer) : null;
 
-            // extra classes for card
             let cardClass = 'question-card';
             if (ua) {
                 cardClass += isCorrect ? ' correct-highlight' : ' incorrect-highlight';
             }
 
-            // build options
             let optionsHtml = '';
             q.options.forEach((optText, optIdx) => {
                 const letter = String.fromCharCode(65 + optIdx);
                 let optClass = 'option';
-
                 if (ua) {
                     if (letter === q.answer) optClass += ' correct-option';
                     else if (letter === selectedLetter) optClass += ' incorrect-option';
-                    else if (letter === selectedLetter && letter !== q.answer) optClass += ' incorrect-option';
                 }
-
                 const letterSpan = `<span class="option-letter">${letter}</span>`;
                 const textSpan = `<span>${optText}</span>`;
                 optionsHtml += `<div class="${optClass}" data-qidx="${idx}" data-letter="${letter}">${letterSpan}${textSpan}</div>`;
             });
 
-            // feedback area
             let feedbackHtml = '';
             if (ua) {
                 if (isCorrect) {
-                    feedbackHtml = `<div class="feedback correct">✅ Correct! <span class="explain"></span></div>`;
+                    feedbackHtml = `<div class="feedback correct">✅ Correct!</div>`;
                 } else {
-                    feedbackHtml = `<div class="feedback incorrect">❌ Incorrect. Correct answer: ${q.answer}. <span class="explain"></span></div>`;
+                    feedbackHtml = `<div class="feedback incorrect">❌ Incorrect. Correct answer: ${q.answer}.</div>`;
                 }
             } else {
                 feedbackHtml = `<div class="feedback" style="visibility:hidden;">&nbsp;</div>`;
@@ -666,9 +567,8 @@
 
         quizContainer.innerHTML = html;
 
-        // attach click listeners to options
         document.querySelectorAll('.option').forEach(optDiv => {
-            optDiv.addEventListener('click', function(e) {
+            optDiv.addEventListener('click', function() {
                 const qIdx = parseInt(this.dataset.qidx, 10);
                 const letter = this.dataset.letter;
                 handleOptionSelect(qIdx, letter);
@@ -676,27 +576,14 @@
         });
     }
 
-    // handle selection
     function handleOptionSelect(qIdx, letter) {
-        // if already answered, ignore
-        if (userAnswers[qIdx]) return;
-
+        if (userAnswers[qIdx]) return; // already answered
         const q = questions[qIdx];
         const isCorrect = (letter === q.answer);
-
-        // store
-        userAnswers[qIdx] = {
-            selected: letter,
-            correct: q.answer
-        };
-
+        userAnswers[qIdx] = { selected: letter, correct: q.answer };
         if (isCorrect) correctCount++;
         else incorrectCount++;
-
         updateStats();
-
-        // re-render just that question card for simplicity (or re-render all? we re-render all to keep simple)
-        // but re-rendering all resets listeners; fine.
         renderAll();
     }
 
@@ -709,7 +596,6 @@
     // ------------------------------------------------------------------
     // 3. INITIALISE & SHUFFLE BUTTON
     // ------------------------------------------------------------------
-    // first load: original order, original options
     questions = buildInitialQuestions();
     userAnswers = {};
     correctCount = 0;
@@ -721,10 +607,9 @@
         resetAndShuffle();
     });
 
-    // also if user wants to reset without shuffle? not needed.
-    // but we can add a small note: shuffle also clears answers.
-    // That's fine.
-
+    // update subtitle with total count dynamically
+    document.getElementById('subtitle').textContent =
+        `Jacobian, singularities, kinematics & mechanisms • ${rawData.length} MCQs`;
 </script>
 </body>
 </html>
